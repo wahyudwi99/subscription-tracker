@@ -20,6 +20,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import AddSubscriptionPicker from "../components/AddSubscription";
+
+
+type SubsDataType = {
+  subsName: string;
+  startDate: string;
+  duration: string;
+}
 
 /* ================= DATA ================= */
 
@@ -31,13 +39,24 @@ const SPENDING_HISTORY = [
   { month: "May", amount: 155 },
   { month: "Jun", amount: 175 },
 ];
-
+const SUBS_DATA = [
+  { subsName: "Netflix", startDate: "20 Nov 2025", duration: "1 month"},
+  { subsName: "Disney+", startDate: "24 Okt 2025", duration: "1 month"},
+  { subsName: "Spotify", startDate: "10 Nov 2025", duration: "1 month"},
+  { subsName: "CNN", startDate: "15 Okt 2025", duration: "1 month"},
+  { subsName: "Bloomberg", startDate: "20 Nov 2025", duration: "1 month"},
+  { subsName: "ESPN", startDate: "24 Okt 2025", duration: "1 month"},
+  { subsName: "Apple TV", startDate: "10 Nov 2025", duration: "1 month"},
+  { subsName: "Vercel", startDate: "15 Okt 2025", duration: "1 month"},
+]
 /* ================= COMPONENT ================= */
 
 export default function Dashboard() {
   const totalMonthly = useMemo(() => 0, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [subsData, setSubsData] = useState<SubsDataType[]>(SUBS_DATA)
+  
 
   return (
     <div className="min-h-screen flex bg-[#f7f9fc] text-slate-900">
@@ -80,7 +99,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-lg hover:bg-slate-100 cursor-pointer"
             >
               <Menu size={22} />
             </button>
@@ -95,7 +114,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => setAddOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-700"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-sm hover:bg-indigo-700 cursor-pointer"
           >
             <Plus size={16} />
             Add Subscription
@@ -163,8 +182,8 @@ export default function Dashboard() {
         </div>
 
         {/* ================= TABLE ================= */}
-        <div className="bg-white rounded-2xl shadow-sm">
-          <div className="p-6 flex justify-between items-center border-b">
+        <div className="bg-white rounded-2xl shadow-sm max-h-150 p-3">
+          <div className="p-6 flex justify-between items-center">
             <h3 className="font-semibold">My Subscriptions</h3>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
@@ -174,72 +193,47 @@ export default function Dashboard() {
               />
             </div>
           </div>
+            {subsData.length === 0 ? (
+                <div className="p-10 text-center text-slate-500 text-sm">
+                  No subscriptions found. Start by adding one!
+                </div>
+              ) : (
+                <div className="max-h-100 overflow-y-auto space-y-4">
+                  {subsData.map((subs, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex flex-col text-left">
+                        <span className="font-medium text-slate-800">
+                          {subs.subsName}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          Start: {subs.startDate}
+                        </span>
+                      </div>
 
-          <div className="p-10 text-center text-slate-500 text-sm">
-            No subscriptions found. Start by adding one!
-          </div>
+                      <span className="text-sm text-slate-600">
+                        {subs.duration}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
         </div>
       </main>
 
       {/* ================= ADD SUBSCRIPTION MODAL ================= */}
-      {addOpen && <AddSubscriptionPicker onClose={() => setAddOpen(false)} />}
+      {addOpen && (
+        <AddSubscriptionPicker
+          setSubsData={setSubsData}
+          setAddOpen={setAddOpen}/>
+      )}
     </div>
   );
 }
 
-/* ================= ADD SUBSCRIPTION PICKER ================= */
 
-function AddSubscriptionPicker({ onClose }: { onClose: () => void }) {
-  const items = [
-    "Netflix",
-    "Spotify",
-    "YouTube Premium",
-    "Apple Music",
-    "Disney+",
-    "AWS",
-    "Google Cloud",
-    "ChatGPT Plus",
-  ];
-
-  return (
-    <div className="fixed z-50 inset-0 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
-          <div className="relative bg-white w-full max-w-md rounded-2xl shadow-xl p-6">
-            <h2 className="text-lg font-semibold mb-1">
-              Track a subscription
-            </h2>
-            <p className="text-sm text-slate-500 mb-5">
-              Choose a service you want to track
-            </p>
-
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {items.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    console.log("Selected:", item);
-                    onClose();
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 hover:border-indigo-500 transition"
-                >
-                  <span className="font-medium">{item}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-    </div>
-  );
-}
 
 /* ================= REUSABLE ================= */
 
