@@ -3,9 +3,9 @@ import { useState } from "react";
 import { start } from "repl";
 
 type SubsDataType = {
-  subsName: string;
-  startDate: string;
-  duration: string;
+  subscription_name: string;
+  subscription_start_date: string;
+  subscription_period: string;
 }
 
 type AddSubsDataType = {
@@ -164,9 +164,9 @@ export default function AddSubscriptionPicker({setSubsData, setAddOpen}: AddSubs
                     setSubsData(prev => [
                       ...prev,
                       {
-                        subsName: subsName,
-                        startDate: startDate,
-                        duration: duration
+                        subscription_name: subsName,
+                        subscription_start_date: startDate,
+                        subscription_period: duration
                       }
                     ])
                   }}

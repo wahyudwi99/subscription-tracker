@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   LayoutDashboard,
   CreditCard,
@@ -11,6 +11,7 @@ import {
   AlertCircle,
   BrainCircuit,
   Menu,
+  Trash2
 } from "lucide-react";
 import {
   AreaChart,
@@ -24,9 +25,9 @@ import AddSubscriptionPicker from "../components/AddSubscription";
 
 
 type SubsDataType = {
-  subsName: string;
-  startDate: string;
-  duration: string;
+  subscription_name: string;
+  subscription_start_date: string;
+  subscription_period: string;
 }
 
 /* ================= DATA ================= */
@@ -55,8 +56,74 @@ export default function Dashboard() {
   const totalMonthly = useMemo(() => 0, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [subsData, setSubsData] = useState<SubsDataType[]>(SUBS_DATA)
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedSubsName, setSelectedSubsName] = useState<string | null>(null);
+  const [subsData, setSubsData] = useState<SubsDataType[]>([])
+
+  const handleDeleteClick = (subs_name: string) => {
+    setSelectedSubsName(subs_name);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedSubsName === null) return;
+
+    setSubsData(prev =>
+      prev.filter(subs => subs.subscription_name !== selectedSubsName)
+    );
+    setShowDeleteConfirm(false);
+    setSelectedSubsName(null);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setSelectedSubsName(null);
+  };
+
+  const deleteSubscription = async() => {
+    try {
+      const post_res = await fetch(`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}/delete-subscription`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_BACKEND_SECRET_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: "wahyudwinugraha99@gmail.com",
+          deleted_subs_name: selectedSubsName
+        })
+      })
+    } catch(error) {
+      console.log("API fetch error", error)
+    }
+  }
+
+  useEffect(() => {
+    const getSubscriptionData = async () => {
+        try {
+          const get_res = await fetch(`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}/get-subscription-data`, {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_BACKEND_SECRET_KEY}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                email: "wahyudwinugraha99@gmail.com"
+              })
+          })
+          if (get_res.status === 200) {
+            const getSubData = await get_res.json()
+            setSubsData(getSubData.data)
+            console.log(subsData)
+          }
+        } catch (error) {
+          console.log("API fetch data error", error)
+        }
+    }
+
+    getSubscriptionData();
+  }, [])
+
 
   return (
     <div className="min-h-screen flex bg-[#f7f9fc] text-slate-900">
@@ -194,32 +261,78 @@ export default function Dashboard() {
             </div>
           </div>
             {subsData.length === 0 ? (
-                <div className="p-10 text-center text-slate-500 text-sm">
-                  No subscriptions found. Start by adding one!
-                </div>
-              ) : (
-                <div className="max-h-100 overflow-y-auto space-y-4">
+              <div className="p-10 text-center text-slate-500 text-sm">
+                No subscriptions found. Start by adding one!
+              </div>
+            ) : (
+              <>
+                <div className="max-h-100 overflow-y-auto space-y-4 px-6 pb-6">
                   {subsData.map((subs, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:bg-slate-50 transition"
                     >
                       <div className="flex flex-col text-left">
                         <span className="font-medium text-slate-800">
-                          {subs.subsName}
+                          {subs.subscription_name}
                         </span>
                         <span className="text-xs text-slate-500">
-                          Start: {subs.startDate}
+                          Start: {subs.subscription_start_date}
                         </span>
                       </div>
 
-                      <span className="text-sm text-slate-600">
-                        {subs.duration}
-                      </span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-slate-600">
+                          {subs.subscription_period}
+                        </span>
+
+                        <button
+                          onClick={() => handleDeleteClick(subs.subscription_name)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition cursor-pointer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
+
+                {/* DELETE CONFIRM MODAL */}
+                {showDeleteConfirm && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+                    <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+                      <h3 className="text-lg font-semibold text-slate-800">
+                        Delete subscription?
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        Are you sure to delete this subscription? This action can not be undo
+                      </p>
+
+                      <div className="mt-6 flex justify-end gap-3">
+                        <button
+                          onClick={cancelDelete}
+                          className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            confirmDelete();
+                            deleteSubscription();
+                          }}
+                          className="rounded-lg bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600 cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+
+
         </div>
       </main>
 
