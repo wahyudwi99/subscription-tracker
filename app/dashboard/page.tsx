@@ -40,20 +40,11 @@ const SPENDING_HISTORY = [
   { month: "May", amount: 155 },
   { month: "Jun", amount: 175 },
 ];
-const SUBS_DATA = [
-  { subsName: "Netflix", startDate: "20 Nov 2025", duration: "1 month"},
-  { subsName: "Disney+", startDate: "24 Okt 2025", duration: "1 month"},
-  { subsName: "Spotify", startDate: "10 Nov 2025", duration: "1 month"},
-  { subsName: "CNN", startDate: "15 Okt 2025", duration: "1 month"},
-  { subsName: "Bloomberg", startDate: "20 Nov 2025", duration: "1 month"},
-  { subsName: "ESPN", startDate: "24 Okt 2025", duration: "1 month"},
-  { subsName: "Apple TV", startDate: "10 Nov 2025", duration: "1 month"},
-  { subsName: "Vercel", startDate: "15 Okt 2025", duration: "1 month"},
-]
 /* ================= COMPONENT ================= */
 
 export default function Dashboard() {
   const totalMonthly = useMemo(() => 0, []);
+  const [userEmail, setUserEmail] = useState("")
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -89,7 +80,7 @@ export default function Dashboard() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: "wahyudwinugraha99@gmail.com",
+          email: userEmail,
           deleted_subs_name: selectedSubsName
         })
       })
@@ -102,19 +93,17 @@ export default function Dashboard() {
     const getSubscriptionData = async () => {
         try {
           const get_res = await fetch(`${process.env.NEXT_PUBLIC_ADMIN_BASE_URL}/get-subscription-data`, {
-              method: "POST",
+              method: "GET",
+              credentials: "include",
               headers: {
                 "Authorization": `Bearer ${process.env.NEXT_PUBLIC_BACKEND_SECRET_KEY}`,
                 "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                email: "wahyudwinugraha99@gmail.com"
-              })
+              }
           })
           if (get_res.status === 200) {
             const getSubData = await get_res.json()
-            setSubsData(getSubData.data)
-            console.log(subsData)
+            setSubsData(getSubData.data.list_data)
+            setUserEmail(getSubData.data.user_email)
           }
         } catch (error) {
           console.log("API fetch data error", error)
@@ -249,96 +238,128 @@ export default function Dashboard() {
         </div>
 
         {/* ================= TABLE ================= */}
-        <div className="bg-white rounded-2xl shadow-sm max-h-150 p-3">
-          <div className="p-6 flex justify-between items-center">
-            <h3 className="font-semibold">My Subscriptions</h3>
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-              <input
-                placeholder="Search services..."
-                className="pl-9 pr-3 py-2 rounded-lg bg-slate-100 text-sm outline-none"
-              />
-            </div>
-          </div>
-            {subsData.length === 0 ? (
-              <div className="p-10 text-center text-slate-500 text-sm">
-                No subscriptions found. Start by adding one!
-              </div>
-            ) : (
-              <>
-                <div className="max-h-100 overflow-y-auto space-y-4 px-6 pb-6">
-                  {subsData.map((subs, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:bg-slate-50 transition"
-                    >
-                      <div className="flex flex-col text-left">
-                        <span className="font-medium text-slate-800">
-                          {subs.subscription_name}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          Start: {subs.subscription_start_date}
-                        </span>
-                      </div>
+        
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* ================= LEFT (2/3) ================= */}
+            <div className="xl:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm">
+                {/* HEADER */}
+                <div className="px-6 py-4 flex justify-between items-center border-b border-slate-100">
+                  <h3 className="font-semibold">My Subscriptions</h3>
 
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-slate-600">
-                          {subs.subscription_period}
-                        </span>
-
-                        <button
-                          onClick={() => handleDeleteClick(subs.subscription_name)}
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition cursor-pointer"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search
+                        size={16}
+                        className="absolute left-3 top-2.5 text-slate-400"
+                      />
+                      <input
+                        placeholder="Search services..."
+                        className="pl-9 pr-3 py-2 rounded-lg bg-slate-100 text-sm outline-none"
+                      />
                     </div>
-                  ))}
+
+                    <button className="text-sm text-indigo-600 hover:underline">
+                      View all
+                    </button>
+                  </div>
                 </div>
 
-                {/* DELETE CONFIRM MODAL */}
-                {showDeleteConfirm && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                    <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
-                      <h3 className="text-lg font-semibold text-slate-800">
-                        Delete subscription?
-                      </h3>
-                      <p className="mt-2 text-sm text-slate-600">
-                        Are you sure to delete this subscription? This action can not be undo
-                      </p>
-
-                      <div className="mt-6 flex justify-end gap-3">
-                        <button
-                          onClick={cancelDelete}
-                          className="rounded-lg px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => {
-                            confirmDelete();
-                            deleteSubscription();
-                          }}
-                          className="rounded-lg bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600 cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
+                {/* CONTENT */}
+                {subsData.length === 0 ? (
+                  <div className="p-10 text-center">
+                    <p className="text-slate-500 text-sm mb-3">
+                      You don’t have any subscriptions yet
+                    </p>
+                    <button
+                      onClick={() => setAddOpen(true)}
+                      className="text-sm text-indigo-600 hover:underline"
+                    >
+                      Add your first subscription
+                    </button>
                   </div>
+                ) : (
+                  <>
+                    <div className="max-h-[320px] overflow-y-auto space-y-3 px-6 py-4">
+                      {subsData.map((subs, index) => (
+                        <div
+                          key={index}
+                          className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 hover:shadow-sm transition"
+                        >
+                          {/* LEFT */}
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-600">
+                              {subs.subscription_name.charAt(0)}
+                            </div>
+
+                            <div>
+                              <p className="font-medium text-slate-800">
+                                {subs.subscription_name}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Started {subs.subscription_start_date}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* RIGHT */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs px-2 py-1 rounded-md bg-indigo-50 text-indigo-600">
+                              {subs.subscription_period}
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                handleDeleteClick(subs.subscription_name)
+                              }
+                              className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 p-2 rounded-lg transition cursor-pointer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
-              </>
-            )}
+              </div>
+            </div>
 
+            {/* ================= RIGHT (1/3) ================= */}
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="font-semibold mb-3">Insights</h3>
 
+              <div className="space-y-4">
+                <div className="rounded-xl bg-indigo-50 p-4">
+                  <p className="text-sm font-medium text-indigo-700">
+                    Upcoming Renewals
+                  </p>
+                  <p className="text-xs text-indigo-600 mt-1">
+                    No subscriptions renewing this week
+                  </p>
+                </div>
 
-        </div>
+                <div className="rounded-xl bg-emerald-50 p-4">
+                  <p className="text-sm font-medium text-emerald-700">
+                    Potential Savings
+                  </p>
+                  <p className="text-xs text-emerald-600 mt-1">
+                    Cancel unused subscriptions to save more
+                  </p>
+                </div>
+
+                <button className="w-full mt-2 text-sm text-indigo-600 hover:underline">
+                  Open AI Advisor
+                </button>
+              </div>
+            </div>
+          </div>
       </main>
 
       {/* ================= ADD SUBSCRIPTION MODAL ================= */}
       {addOpen && (
         <AddSubscriptionPicker
+          userEmail={userEmail}
           setSubsData={setSubsData}
           setAddOpen={setAddOpen}/>
       )}

@@ -31,8 +31,8 @@ function FeatureCard({icon, title, description}: FeatureType) {
 
 
 export default function Page() {
-  const onGetStarted = (plan?: string) => {
-    console.log('Selected plan:', plan ?? 'default');
+  const onGetStarted = () => {
+    window.location.href = "/login";
   };
 
   return (
@@ -65,7 +65,7 @@ export default function Page() {
 
         <button
           onClick={() => onGetStarted()}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full transition"
+          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full transition cursor-pointer"
         >
           Get Started
         </button>
