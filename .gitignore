@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# capacitor
+/android/app/build
+/android/capacitor-cordova-android-plugins/build
+/android/app/src/main/assets/capacitor.config.json
+/ios/App/public
+/ios/App/App.xcworkspace
+/ios/App/Podfile.lock
