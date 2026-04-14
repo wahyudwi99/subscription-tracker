@@ -87,7 +87,7 @@ export default function Page() {
 
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <button
-            onClick={() => onGetStarted('Free')}
+            onClick={() => onGetStarted()}
             className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl text-lg font-semibold shadow hover:bg-indigo-500 transition"
           >
             Start Free Dashboard
